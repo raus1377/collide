@@ -1,0 +1,6 @@
+.env
+.qloo_cache.json
+.qloo_cache.json.tmp
+__pycache__/
+*.pyc
+.pytest_cache/
