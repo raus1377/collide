@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collide</title>
+<meta name="description" content="Make something your taste would never make. A taste dial and collision board built on Qloo's taste graph.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --cream:#f7f1e8; --ink:#2a1a3c; --coral:#ff7f5c; --coral-d:#e0603f; --lime:#e4eaa8; --muted:#6c6276; --line:#d9cfc1; --card:#fbf8f3; --lilac:#b7a9d8; --teal:#2f8f83; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--cream); color:var(--ink); font:17px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; }
+  .serif { font-family:"Instrument Serif","Iowan Old Style",Georgia,serif; font-weight:400; }
+  .mono { font-family:"Space Mono",ui-monospace,SFMono-Regular,Menlo,monospace; text-transform:uppercase; letter-spacing:.08em; font-size:.72rem; }
+  .skip { position:absolute; left:-999px; top:12px; background:var(--ink); color:#fff; padding:12px 16px; z-index:20; }
+  .skip:focus { left:16px; }
+  :focus-visible { outline:3px solid var(--coral-d); outline-offset:2px; }
+  .stripe { height:8px; background:repeating-linear-gradient(90deg,var(--coral) 0 100px,var(--ink) 100px 200px,var(--lime) 200px 300px); }
+  nav { display:flex; justify-content:space-between; align-items:center; padding:20px 5vw; border-bottom:1px solid var(--line); background:var(--cream); }
+  .logo { font-size:2.5rem; line-height:1; letter-spacing:-.03em; text-decoration:none; color:var(--ink); }
+  .logo i { color:var(--coral-d); font-style:italic; }
+  nav .links { display:flex; align-items:center; gap:30px; font-weight:700; font-size:.95rem; }
+  nav .links a { color:var(--ink); text-decoration:none; }
+  nav .links a.cta { background:var(--ink); color:#fff; padding:15px 22px; }
+  @media (max-width:700px) { nav .links a:not(.cta) { display:none; } }
+  .band { background:var(--ink); color:var(--cream); position:relative; overflow:hidden; padding:84px 5vw 140px; }
+  .band .ring { position:absolute; border:1px solid rgba(255,255,255,.09); border-radius:50%; right:-140px; top:-120px; width:620px; height:620px; }
+  .band .ring.b { width:900px; height:900px; right:-300px; top:-250px; }
+  .band-in { max-width:1240px; margin:0 auto; position:relative; display:grid; grid-template-columns:1.6fr 1fr; gap:40px; align-items:center; }
+  @media (max-width:900px) { .band-in { grid-template-columns:1fr; } .dialart { display:none; } }
+  .eyebrow { display:flex; align-items:center; gap:10px; margin-bottom:28px; color:var(--lime); }
+  .eyebrow b { color:var(--coral); font-size:1.3rem; line-height:1; }
+  h1 { font-size:clamp(3.4rem,8.4vw,7.4rem); line-height:.9; letter-spacing:-.04em; margin:0 0 26px; }
+  h1 em { color:var(--coral); }
+  .lead { color:#d8cfe3; max-width:50ch; margin:0; font-size:1.12rem; }
+  .dialart { position:relative; justify-self:center; width:min(340px,100%); }
+  .dialart svg { width:100%; display:block; }
+  .tag { position:absolute; right:-6px; top:-14px; transform:rotate(7deg); background:var(--lime); color:var(--ink); border:1px solid var(--ink); padding:12px 16px; font-family:"Space Mono",ui-monospace,monospace; font-size:.78rem; line-height:1.4; box-shadow:4px 4px 0 rgba(0,0,0,.35); }
+  .formstrip { max-width:1240px; margin:-84px auto 0; padding:0 5vw; position:relative; z-index:3; }
+  .win { background:var(--card); border:1px solid var(--ink); box-shadow:10px 10px 0 var(--ink); }
+  .win-h { background:var(--lime); border-bottom:1px solid var(--ink); padding:12px 16px; display:flex; align-items:center; gap:7px; }
+  .win-h i { width:11px; height:11px; border-radius:50%; background:var(--ink); } .win-h i:nth-child(2) { background:var(--coral); } .win-h i:nth-child(3) { background:var(--lilac); }
+  .win-h span { margin:0 auto; }
+  .win-b { padding:24px; }
+  .row { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; margin-bottom:14px; }
+  @media (max-width:760px) { .row { grid-template-columns:1fr; } }
+  label { display:block; margin:0 0 6px; }
+  .hint { color:var(--muted); text-transform:none; letter-spacing:0; }
+  input[type=text], select { width:100%; padding:13px 14px; border:1px solid var(--ink); border-radius:0; background:#fff; color:var(--ink); font:inherit; }
+  .tastebox { display:flex; flex-wrap:wrap; gap:8px; padding:8px; border:1px solid var(--ink); background:#fff; min-height:52px; }
+  .tastebox input { flex:1; min-width:140px; border:0 !important; padding:6px !important; outline:none !important; }
+  .chip { background:var(--lime); border:1px solid var(--ink); padding:3px 4px 3px 10px; display:inline-flex; gap:6px; align-items:center; font-size:.9rem; }
+  .chip button { border:0; background:transparent; cursor:pointer; font-size:1rem; line-height:1; padding:0 5px; color:var(--ink); }
+  .examples { margin:0 0 16px; color:var(--muted); }
+  .examples button { border:1px dashed var(--ink); background:transparent; color:var(--ink); padding:4px 12px; margin:0 6px 6px 0; cursor:pointer; font:inherit; font-size:.85rem; }
+  .btn { background:var(--coral); color:var(--ink); border:1px solid var(--ink); padding:16px 28px; font:inherit; font-weight:700; cursor:pointer; }
+  .btn:hover { transform:translate(-2px,-2px); box-shadow:4px 4px 0 var(--ink); }
+  .btn:disabled { opacity:.6; cursor:wait; transform:none; box-shadow:none; }
+  .btn.ghost { background:transparent; padding:11px 18px; }
+  .banner { background:var(--lime); border-bottom:1px solid var(--ink); padding:10px 5vw; }
+  .wrap { max-width:1240px; margin:0 auto; padding:0 5vw; }
+  #status { padding-top:26px; color:var(--muted); }
+  .error { background:#ffd9cf; border:1px solid var(--ink); padding:14px 16px; }
+  #out { scroll-margin-top:12px; }
+  .collision { padding:56px 0 8px; }
+  .collision h2 { font-size:clamp(3rem,9vw,7rem); line-height:.92; letter-spacing:-.04em; margin:8px 0 0; }
+  .strip { background:var(--lime); border:1px solid var(--ink); display:flex; flex-wrap:wrap; gap:16px 44px; padding:24px 30px; align-items:flex-end; margin-top:28px; }
+  .stat b { font:400 3.2rem/1 "Instrument Serif",Georgia,serif; display:block; }
+  .strip .note { margin-left:auto; }
+  .dial { border:1px solid var(--ink); background:var(--card); padding:22px 24px; margin-top:28px; }
+  .dial .ends { display:flex; justify-content:space-between; margin-bottom:6px; }
+  .dial .read { font:400 2rem/1.1 "Instrument Serif",Georgia,serif; margin-top:8px; }
+  input[type=range] { width:100%; accent-color:var(--coral-d); height:28px; }
+  .bar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin:30px 0 16px; border-bottom:1px solid var(--ink); padding-bottom:14px; }
+  .chips { display:flex; flex-wrap:wrap; gap:10px; }
+  .chips button { border:1px solid var(--ink); background:transparent; padding:10px 16px; font:inherit; cursor:pointer; color:var(--ink); }
+  .chips button.on { background:var(--ink); color:#fff; }
+  .tools { display:flex; gap:10px; flex-wrap:wrap; }
+  .board { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:860px) { .board { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:520px) { .board { grid-template-columns:1fr; } }
+  .board.list { grid-template-columns:1fr; }
+  .tile { border:1px solid var(--ink); background:var(--card); padding:18px; display:flex; flex-direction:column; gap:4px; min-height:170px; position:relative; }
+  .tile::before { content:""; position:absolute; left:-1px; top:-1px; right:-1px; height:8px; background:var(--lilac); }
+  .tile.keep::before { background:var(--lime); } .tile.clash::before { background:var(--coral); } .tile.bridge::before { background:var(--teal); }
+  .tile::after { content:"↗"; position:absolute; right:14px; top:20px; }
+  .tile .mono { margin-top:8px; color:var(--muted); }
+  .tile.clash .mono { color:var(--coral-d); } .tile.bridge .mono { color:var(--teal); }
+  .tile b { font:400 1.7rem/1.08 "Instrument Serif",Georgia,serif; letter-spacing:-.01em; }
+  .tile small { color:var(--muted); font-size:.82rem; }
+  .tile .why { margin-top:auto; padding-top:10px; font-size:.82rem; color:var(--muted); border-top:1px dashed var(--ink); }
+  .board.list .tile { min-height:0; flex-direction:row; align-items:baseline; gap:18px; flex-wrap:wrap; }
+  .board.list .tile .why { margin:0; border:0; padding:0; }
+  .card { border:1px solid var(--ink); background:var(--card); padding:28px; margin-top:22px; }
+  .card h3 { font:400 2.2rem/1 "Instrument Serif",Georgia,serif; margin:0 0 14px; letter-spacing:-.02em; }
+  .card p { margin:0 0 12px; font-size:1.05rem; max-width:80ch; }
+  .rules { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  @media (max-width:700px) { .rules { grid-template-columns:1fr; } }
+  .rulei { border:1px solid var(--ink); padding:16px; background:#fff; }
+  .rulei b { display:block; font:400 1.5rem/1.1 "Instrument Serif",Georgia,serif; margin-bottom:4px; }
+  mark { background:var(--lime); color:inherit; padding:1px 6px; border:1px solid var(--ink); font-weight:700; }
+  .meta { color:var(--muted); font-size:.82rem; }
+  details { margin-top:22px; border:1px solid var(--ink); background:var(--card); padding:14px 18px; } summary { cursor:pointer; font-weight:700; }
+  pre { white-space:pre-wrap; background:#fff; border:1px solid var(--ink); padding:14px; font:.78rem/1.5 "Space Mono",ui-monospace,monospace; }
+  .how { margin:96px 0 0; }
+  .how h2 { font-size:clamp(2.4rem,5vw,4rem); letter-spacing:-.03em; line-height:.95; margin:8px 0 28px; }
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:800px) { .steps { grid-template-columns:1fr; } }
+  .step { border:1px solid var(--ink); padding:24px; background:var(--card); } .step b { font:400 2.4rem/1 "Instrument Serif",Georgia,serif; display:block; margin:8px 0; }
+  .step p { margin:0; color:#4b3f58; }
+  footer { margin-top:80px; background:var(--ink); color:#b9aecb; padding:34px 5vw; }
+  @media print {
+    body { background:#fff; }
+    .stripe, nav, .band, .formstrip, .banner, #status, .dial, .bar, details, .how, footer, .skip { display:none !important; }
+    .tile, .card { break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#out">Skip to results</a>
+<div class="stripe"></div>
+<nav>
+  <a class="logo serif" href="/" aria-label="Collide home">coll<i>i</i>de</a>
+  <div class="links"><a href="#how">How it works</a><a class="cta" href="#start">Find my collision ↗</a></div>
+</nav>
+<div id="banner"></div>
+
+<header class="band">
+  <div class="ring"></div><div class="ring b"></div>
+  <div class="band-in">
+    <div>
+      <div class="eyebrow mono"><b>✳</b> For makers who are bored of themselves</div>
+      <h1 class="serif">Make something your taste <em>would never</em> make.</h1>
+      <p class="lead">Tell Collide what you love. It finds your measurable opposite, the few things that sit between you, and gives you a dial to decide how hard to collide them.</p>
+    </div>
+    <div class="dialart" aria-hidden="true">
+      <svg viewBox="0 0 300 200"><path d="M30 170 A120 120 0 0 1 270 170" fill="none" stroke="#e4eaa8" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/><path d="M30 170 A120 120 0 0 1 150 50" fill="none" stroke="#ff7f5c" stroke-width="12" stroke-linecap="butt"/><circle cx="150" cy="50" r="14" fill="#f7f1e8" stroke="#2a1a3c" stroke-width="3"/><text x="30" y="194" fill="#d8cfe3" font-family="Space Mono,monospace" font-size="10">YOUR WORLD</text><text x="270" y="194" text-anchor="end" fill="#d8cfe3" font-family="Space Mono,monospace" font-size="10">FULL OPPOSITE</text></svg>
+      <div class="tag">measured, not guessed. ↗</div>
+    </div>
+  </div>
+</header>
+
+<div class="formstrip" id="start">
+  <form class="win" id="form">
+    <div class="win-h"><i></i><i></i><i></i><span class="mono">Collide / Start here</span></div>
+    <div class="win-b">
+      <div class="row">
+        <div>
+          <label class="mono" for="tasteInput">Things you love <span class="hint">(1 to 3, Enter after each)</span></label>
+          <div class="tastebox" id="tastebox"><input type="text" id="tasteInput" placeholder="e.g. Billie Eilish" autocomplete="off"></div>
+        </div>
+        <div>
+          <label class="mono" for="medium">You're making a</label>
+          <select id="medium"><option value="music">Track</option><option value="fashion">Capsule collection</option><option value="film">Short film</option><option value="brand">Campaign</option><option value="food">Tasting menu</option></select>
+        </div>
+        <div>
+          <label class="mono" for="city">City <span class="hint">(optional)</span></label>
+          <input type="text" id="city" placeholder="e.g. Chicago" autocomplete="off">
+        </div>
+      </div>
+      <div class="examples mono">Try: <button type="button" data-ex="Billie Eilish">Billie Eilish</button><button type="button" data-ex="Wes Anderson|Lorde">Wes Anderson + Lorde</button><button type="button" data-ex="Supreme">Supreme</button></div>
+      <button class="btn" id="go" type="submit">Find my collision ↗</button>
+    </div>
+  </form>
+</div>
+
+<main class="wrap">
+  <div id="status" role="status" aria-live="polite"></div>
+  <div id="out" tabindex="-1"></div>
+
+  <section class="how" id="how">
+    <span class="mono" style="color:var(--coral-d)">How it works</span>
+    <h2 class="serif">Keep, clash, bridge.</h2>
+    <div class="steps">
+      <div class="step"><span class="mono">01</span><b>Keep</b><p>What lives in your own taste world, read from Qloo's graph.</p></div>
+      <div class="step"><span class="mono">02</span><b>Clash</b><p>Entities measurably far from your taste, scored from Qloo's tags.</p></div>
+      <div class="step"><span class="mono">03</span><b>Bridge</b><p>The few things Qloo ranks highly for you and the clash together.</p></div>
+    </div>
+  </section>
+</main>
+<footer class="mono">Collide · Built for the Qloo Agentic Hackathon · Affinity is taste fit, not a prediction of success.</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let seeds = [], data = null, seed = 1, roleF = "all", listView = false;
+
+fetch("/healthz").then(r => r.json()).then(h => {
+  if (h.mock) $("banner").innerHTML = '<div class="banner mono"><b>Sample data mode.</b> Names are fictional test data, not Qloo output.</div>';
+}).catch(() => {});
+
+function renderSeeds() {
+  const box = $("tastebox");
+  box.querySelectorAll(".chip").forEach(n => n.remove());
+  seeds.forEach((t, i) => {
+    const el = document.createElement("span");
+    el.className = "chip";
+    el.innerHTML = `${esc(t)}<button type="button" aria-label="Remove ${esc(t)}">×</button>`;
+    el.querySelector("button").onclick = () => { seeds.splice(i, 1); renderSeeds(); };
+    box.insertBefore(el, $("tasteInput"));
+  });
+}
+function addSeed(v) { v = v.trim(); if (v && !seeds.includes(v) && seeds.length < 3) { seeds.push(v); renderSeeds(); } }
+$("tasteInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addSeed(e.target.value); e.target.value = ""; }
+  else if (e.key === "Backspace" && !e.target.value && seeds.length) { seeds.pop(); renderSeeds(); }
+});
+document.querySelectorAll("[data-ex]").forEach(b => b.onclick = () => { seeds = []; b.dataset.ex.split("|").forEach(addSeed); renderSeeds(); });
+
+const DOM = { artist: "Artist", movie: "Film & TV", brand: "Brand", place: "Place" };
+const flat = g => Object.entries(g || {}).flatMap(([d, l]) => l.map(x => ({ ...x, domain: d })));
+function rng(s) { return () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffled(arr, r) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function pick() {
+  const d = +$("dial").value / 100, r = rng(seed * 9973);
+  const keepN = Math.round(4 * (1 - d)), clashN = Math.round(4 * d);
+  const keep = shuffled(flat(data.audience), r).slice(0, keepN).map(x => ({ ...x, role: "keep", why: "From your world: " + (x.tags || []).slice(0, 2).join(", ") }));
+  const clash = shuffled(flat(data.opposites).sort((a, b) => b.distance - a.distance).slice(0, 10), r).slice(0, clashN)
+    .map(x => ({ ...x, role: "clash", why: `${Math.round(x.distance * 100)}% away from your taste` }));
+  const bridge = flat(data.bridges).sort((a, b) => b.strength - a.strength).slice(0, 4);
+  const bp = shuffled(bridge, r).slice(0, 2).map(x => ({ ...x, role: "bridge", why: `Links ${(x.audience_side || []).join(", ") || "you"} with ${(x.opposite_side || []).join(", ") || "the opposite"}` }));
+  return [...keep, ...bp, ...clash];
+}
+
+function drawBoard() {
+  const d = +$("dial").value;
+  $("read").textContent = d < 20 ? "Comfort zone: your own world" : d < 45 ? "A gentle nudge" : d < 70 ? "A real clash" : d < 90 ? "Hard collision" : "Full opposite";
+  const tiles = pick();
+  data._tiles = tiles;
+  const n = r => tiles.filter(t => t.role === r).length;
+  document.querySelectorAll("#roleChips button").forEach(b => {
+    const f = b.dataset.f;
+    b.classList.toggle("on", f === roleF);
+    b.textContent = (f === "all" ? "Everything" : f[0].toUpperCase() + f.slice(1)) + " " + (f === "all" ? tiles.length : n(f));
+  });
+  const shown = tiles.filter(t => roleF === "all" || t.role === roleF);
+  $("board").className = "board" + (listView ? " list" : "");
+  $("board").innerHTML = shown.map(x => `<article class="tile ${x.role}"><span class="mono">${x.role}</span><b>${esc(x.name)}</b><small>${DOM[x.domain] || x.domain}${x.address ? " · " + esc(x.address) : ""}${x.tags?.length ? " · " + x.tags.map(esc).join(", ") : ""}</small><span class="why">${esc(x.why)}</span></article>`).join("") || '<p class="meta">Nothing in this role at this dial setting. Slide the dial.</p>';
+}
+
+const briefHtml = t => esc(t).replace(/\[\[(.+?)\]\]/g, "<mark>$1</mark>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").split(/\n+/).map(p => `<p>${p}</p>`).join("");
+
+function exportMd() {
+  const lines = [`# ${data.title}`, "", `Board (dial ${$("dial").value}/100):`, ...data._tiles.map(x => `- [${x.role}] ${x.name} (${DOM[x.domain] || x.domain}): ${x.why}`), "", data.brief.text.replace(/\[\[(.+?)\]\]/g, "$1")];
+  return lines.join("\n");
+}
+
+function render(d) {
+  data = d; seed = 1; roleF = "all"; listView = false;
+  const farthest = Math.max(0, ...flat(d.opposites).map(x => Math.round((x.distance || 0) * 100)));
+  const nOpp = flat(d.opposites).length, nBr = flat(d.bridges).length;
+  $("out").innerHTML = `
+    <div class="collision">
+      <span class="mono" style="color:var(--coral-d)">Your collision${d.mock ? " · sample data" : ""}</span>
+      <h2 class="serif">${esc(d.title)}</h2>
+    </div>
+    <div class="strip">
+      <div class="stat"><b>${d.scores.opposite_distance}</b><span class="mono">Opposite distance</span></div>
+      <div class="stat"><b>${d.scores.bridge_strength}</b><span class="mono">Bridge strength</span></div>
+      <div class="stat"><b>${nOpp}</b><span class="mono">Clash candidates</span></div>
+      <div class="stat"><b>${nBr}</b><span class="mono">Bridges found</span></div>
+      <span class="note mono">${d.mock ? "Sample data" : "From Qloo's taste graph"} ↗</span>
+    </div>
+    <div class="dial">
+      <div class="ends mono"><span>Your world</span><span>Full opposite</span></div>
+      <input type="range" id="dial" min="0" max="100" value="55" aria-label="Taste dial">
+      <div class="read" id="read"></div>
+    </div>
+    <div class="bar">
+      <div class="chips" id="roleChips"><button data-f="all"></button><button data-f="keep"></button><button data-f="bridge"></button><button data-f="clash"></button></div>
+      <div class="tools"><button class="btn ghost" id="view">List view</button><button class="btn ghost" id="shuffle">Shuffle</button><button class="btn ghost" id="copy">Copy brief</button><button class="btn ghost" id="dl">Download .md</button><button class="btn ghost" id="print">Print</button></div>
+    </div>
+    <div class="board" id="board"></div>
+    <section class="card"><h3 class="serif">Collision rules</h3>
+      <div class="rules">${d.rules.map(r => `<div class="rulei"><b>${esc(r.label)}</b>${esc(r.text)}</div>`).join("")}</div>
+      <p class="meta" style="margin-top:14px">Rules of thumb filled in with your tags and entities. Creative advice, not a prediction.</p>
+    </section>
+    <section class="card"><h3 class="serif">The brief</h3>${briefHtml(d.brief.text)}
+      <p class="meta">${d.brief.verified} cited names checked against Qloo results${d.brief.removed ? `, ${d.brief.removed} unverified name(s) removed` : ""}. ${d.brief.llm ? "Drafted by an LLM from the evidence." : "Written from a template (no LLM configured)."} Dial and shuffle cost no extra API calls.</p>
+    </section>
+    <details><summary>Evidence ledger (${d.ledger.length} lines)</summary>
+      ${d.baseline && d.baseline.naive != null ? `<p class="meta">Clash cards sit ${d.baseline.measured}/100 away from your taste, versus ${d.baseline.naive}/100 for the same Qloo results ranked by popularity alone.</p>` : ""}<pre>${esc(d.ledger.join("\n"))}</pre></details>
+    ${d.warnings.length ? `<p class="meta">Notes: ${d.warnings.map(esc).join("; ")}</p>` : ""}`;
+  $("dial").addEventListener("input", drawBoard);
+  $("roleChips").onclick = e => { const b = e.target.closest("button"); if (b) { roleF = b.dataset.f; drawBoard(); } };
+  $("view").onclick = () => { listView = !listView; $("view").textContent = listView ? "Grid view" : "List view"; drawBoard(); };
+  $("shuffle").onclick = () => { seed++; drawBoard(); };
+  $("print").onclick = () => window.print();
+  $("copy").onclick = async () => { try { await navigator.clipboard.writeText(exportMd()); $("copy").textContent = "Copied"; } catch { $("copy").textContent = "Copy failed"; } };
+  $("dl").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([exportMd()], { type: "text/markdown" })); a.download = "collision.md"; a.click(); };
+  drawBoard();
+  $("out").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  addSeed($("tasteInput").value); $("tasteInput").value = "";
+  if (!seeds.length) { $("status").innerHTML = '<div class="error">Add at least one thing you love first.</div>'; return; }
+  $("go").disabled = true; $("out").innerHTML = ""; $("status").textContent = "Reading the taste graph and finding your opposite…";
+  try {
+    const r = await fetch("/api/collide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ seeds, city: $("city").value, medium: $("medium").value }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Request failed");
+    $("status").textContent = ""; render(d);
+  } catch (err) { $("status").innerHTML = `<div class="error">${esc(err.message)}</div>`; }
+  finally { $("go").disabled = false; }
+});
+</script>
+</body>
+</html>
